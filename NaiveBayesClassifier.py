@@ -8,14 +8,16 @@ val_data_filename = sys.argv[2]
 
 train_data = pd.read_csv(train_data_filename)
 val_data = pd.read_csv(val_data_filename)
+
+#print(train_data.columns)
+#print(val_data.columns)
 #print(train_data.head(10))
 
 # MODIFY TRAINING AND VALIDATION DATA
 train_data = train_data.drop(["team_abbreviation_home", "team_abbreviation_away", "season_type", "away_wl_pre5", "home_wl_pre5"], axis=1)
-
 val_data = val_data.drop(["team_abbreviation_home", "team_abbreviation_away", "season_type", "away_wl_pre5", "home_wl_pre5"], axis=1)
-X_val_data = val_data.iloc[:, 1:].values
-Y_val_data = val_data.iloc[:, 0].values
+X_val_data = val_data.drop("label", axis=1).values
+Y_val_data = val_data["label"].values
 
 
 def probability_of_y(df, Y):
@@ -41,15 +43,20 @@ def gaussian_x_given_y(df, feat_name, feat_val, Y, label):
 
 def naive_bayes_calculation(df, X, Y):
     #names of all columns except first
-    features = list(df.columns)[1:]
+    features = list(df.drop(Y, axis=1).columns)
+    labels = sorted(list(df[Y].unique()))
 
     prior = probability_of_y(df, Y)
 
     Y_prediction = []
 
+    # length of test columns and train columns
+    #print(len(X[0]))
+    #print(len(df.iloc[0]))
+
+
     for x in X:
         #calculate likelihood
-        labels = sorted(list(df[Y].unique()))
         likelihood = [1]*len(labels)
         for j in range(len(labels)):
             for i in range(len(features)):
@@ -71,3 +78,12 @@ Y_prediction = naive_bayes_calculation(train_data, X=X_val_data, Y="label")
 
 for i in Y_prediction:
     print(i)
+
+"""
+from sklearn.metrics import confusion_matrix, f1_score
+print(confusion_matrix(Y_val_data, Y_prediction))
+print(f1_score(Y_val_data, Y_prediction))
+
+print(Y_prediction[0:30])
+print(Y_val_data[0:30])
+"""
